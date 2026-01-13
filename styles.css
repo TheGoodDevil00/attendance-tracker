@@ -85,3 +85,55 @@ input[type=range]::-webkit-slider-runnable-track {
 ::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
 }
+/* ========================================= */
+/* DARK MODE OVERRIDES                       */
+/* ========================================= */
+body.dark {
+    background-color: #0f172a; /* Very dark blue/gray */
+    color: #e2e8f0;
+}
+
+/* Invert White Cards to Dark Gray */
+.dark .bg-white {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0;
+}
+
+/* Invert Light Gray Backgrounds */
+.dark .bg-gray-50, 
+.dark .bg-gray-100 {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #cbd5e1;
+}
+
+/* Fix Text Colors */
+.dark .text-gray-800 { color: #f1f5f9 !important; } /* Main Headings */
+.dark .text-gray-700 { color: #e2e8f0 !important; } /* Sub-text */
+.dark .text-gray-600 { color: #cbd5e1 !important; }
+.dark .text-gray-500 { color: #94a3b8 !important; }
+.dark .text-gray-400 { color: #64748b !important; }
+
+/* Make Indigo lighter so it glows on dark bg */
+.dark .text-indigo-700 { color: #818cf8 !important; } 
+
+/* Fix Inputs & Selects */
+.dark input, 
+.dark select {
+    background-color: #334155 !important;
+    border-color: #475569 !important;
+    color: white !important;
+}
+
+/* Fix Buttons */
+.dark .nav-btn { color: #94a3b8; }
+.dark .nav-btn:hover { background-color: #334155; color: white; }
+
+/* Fix Holiday Banner */
+.dark .bg-yellow-50 {
+    background-color: #422006 !important; /* Dark Brown */
+    border-color: #713f12 !important;
+}
+.dark .text-yellow-800, 
+.dark .text-yellow-700 { color: #fde047 !important; } /* Bright Yellow Text */
