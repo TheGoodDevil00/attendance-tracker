@@ -1,30 +1,111 @@
+/**
+ * ATTENDANCE & GPA MANAGER
+ * ========================
+ * A clean, refactored logic file for managing student data.
+ */
+
+// --- CONFIGURATION & CONSTANTS ---
+const CONFIG = {
+    storageKeys: {
+        attendance: 'att_smart_v2',
+        gpa: 'gpa_v1',
+        theme: 'theme'
+    },
+    gradingScale: [
+        { min: 90, points: 10 },
+        { min: 85, points: 9 },
+        { min: 75, points: 8 },
+        { min: 65, points: 7 },
+        { min: 55, points: 6 },
+        { min: 43, points: 5 },
+        { min: 40, points: 4 },
+        { min: 0,  points: 0 }
+    ],
+    colors: {
+        safe: 'text-green-500',
+        danger: 'text-red-500',
+        barSafe: 'bg-green-400',
+        barDanger: 'bg-gray-300'
+    }
+};
+
+// --- UTILITY HELPERS ---
+const Utils = {
+    id: (id) => document.getElementById(id),
+    
+    save: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
+    
+    load: (key) => JSON.parse(localStorage.getItem(key)) || null,
+    
+    getTodayKey: () => new Date().toISOString().split('T')[0],
+    
+    formatDate: () => {
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date().toLocaleDateString('en-US', options);
+    },
+
+    parseInput: (id, fallback = 0) => {
+        const el = Utils.id(id);
+        const val = parseInt(el.value);
+        return isNaN(val) ? fallback : val;
+    }
+};
+
+
 // ============================================
-// 1. QUICK CALCULATOR LOGIC
+// 1. QUICK CALCULATOR MODULE
 // ============================================
 const calc = {
+    /**
+     * Updates the UI based on inputs. 
+     * Handles the Circle Progress and Forecast Chart.
+     */
     update() {
-        const totalInput = document.getElementById('calc-total');
-        const attendedInput = document.getElementById('calc-attended');
-        const targetInput = document.getElementById('calc-target');
+        // Get Inputs
+        const total = Utils.parseInput('calc-total');
+        let attended = Utils.parseInput('calc-attended');
+        const target = Utils.parseInput('calc-target', 75);
 
-        const total = parseInt(totalInput.value) || 0;
-        const attended = parseInt(attendedInput.value) || 0;
-        const target = parseInt(targetInput.value) || 75;
-
-        // Logic check: Cannot attend more than total
+        // Input Validation: Attended cannot exceed Total
         if (attended > total) {
-            attendedInput.value = total;
-            return this.update();
+            attended = total;
+            Utils.id('calc-attended').value = total;
         }
 
-        // 1. Percent Calculation
+        // 1. Calculate Percentage
         const percent = total === 0 ? 100 : ((attended / total) * 100);
-        document.getElementById('calc-percent').innerText = percent.toFixed(0) + '%';
-        document.getElementById('target-display').innerText = target + '%';
+        Utils.id('calc-percent').innerText = percent.toFixed(0) + '%';
+        Utils.id('target-display').innerText = target + '%';
 
-        // 2. Circle Progress Logic
-        // Radius=40 in 100x100 viewBox. Circumference = 2 * PI * 40 = ~251.2
-        const circle = document.getElementById('circle-progress');
+        // 2. Draw Circular Progress
+        this.renderCircle(percent, target);
+
+        // 3. Status Text & Logic
+        this.renderStatus(attended, total, target, percent);
+
+        // 4. Forecast Chart
+        this.renderForecast(attended, total, target);
+    },
+
+    adjust(type, amount) {
+        const input = Utils.id(`calc-${type}`);
+        let val = parseInt(input.value) || 0;
+        val = Math.max(0, val + amount); // Prevent negative numbers
+        input.value = val;
+        this.update();
+    },
+
+    reset() {
+        Utils.id('calc-total').value = 40;
+        Utils.id('calc-attended').value = 32;
+        this.update();
+    },
+
+    // --- Internal Render Helpers ---
+
+    renderCircle(percent, target) {
+        const circle = Utils.id('circle-progress');
+        // SVG Logic: Radius=40, Circumference = 2 * PI * 40 ≈ 251.2
         const circumference = 251.2; 
         const offset = circumference - (circumference * percent) / 100;
 
@@ -32,75 +113,55 @@ const calc = {
         circle.style.strokeDashoffset = offset;
 
         const isSafe = percent >= target;
-        circle.classList.remove('text-green-500', 'text-red-500');
+        circle.classList.remove(CONFIG.colors.safe, CONFIG.colors.danger);
         circle.classList.add(isSafe ? 'text-green-500' : 'text-red-500');
+    },
 
-        // 3. Status Text
-        const title = document.getElementById('calc-status-title');
-        const desc = document.getElementById('calc-status-desc');
-        const bunkEl = document.getElementById('calc-bunks');
-        const recoverEl = document.getElementById('calc-recover');
+    renderStatus(attended, total, target, percent) {
+        const title = Utils.id('calc-status-title');
+        const desc = Utils.id('calc-status-desc');
+        const bunkEl = Utils.id('calc-bunks');
+        const recoverEl = Utils.id('calc-recover');
 
-        // Formula: Skips = (Attended / Target%) - Total
-        const safeSkips = Math.floor((attended / (target/100)) - total);
-        
-        // Formula: Catchup = (Target% * Total - Attended) / (1 - Target%)
-        const required = Math.ceil(((target/100 * total) - attended) / (1 - target/100));
+        // Math Formulas
+        const safeSkips = Math.floor((attended / (target / 100)) - total);
+        const required = Math.ceil(((target / 100 * total) - attended) / (1 - target / 100));
 
         if (percent >= target) {
             title.innerText = "You're Safe!";
             title.className = "text-3xl md:text-4xl font-extrabold text-green-600 mb-2";
-            desc.innerText = `Buffer available. You can chill a bit.`;
-            bunkEl.innerText = safeSkips > 0 ? safeSkips : 0;
+            desc.innerText = "Buffer available. You can chill a bit.";
+            bunkEl.innerText = Math.max(0, safeSkips);
             recoverEl.innerText = 0;
         } else {
             title.innerText = "Warning!";
             title.className = "text-3xl md:text-4xl font-extrabold text-red-600 mb-2";
             desc.innerText = `Below ${target}%. Don't miss any more classes!`;
             bunkEl.innerText = 0;
-            recoverEl.innerText = required > 0 ? required : 0;
+            recoverEl.innerText = Math.max(0, required);
         }
-
-        this.renderForecast(attended, total, target);
-    },
-
-    adjust(type, amount) {
-        const input = document.getElementById(`calc-${type}`);
-        let val = parseInt(input.value) || 0;
-        val += amount;
-        if (val < 0) val = 0;
-        input.value = val;
-        this.update();
-    },
-
-    reset() {
-        document.getElementById('calc-total').value = 40;
-        document.getElementById('calc-attended').value = 32;
-        this.update();
     },
 
     renderForecast(attended, total, target) {
-        const container = document.getElementById('forecast-container');
+        const container = Utils.id('forecast-container');
         container.innerHTML = '';
         
-        // Generate next 10 classes
-        for(let i = 0; i <= 10; i++) {
-            const projectedTotal = total + i;
-            const projectedAttended = attended + i; 
-            const pct = projectedTotal === 0 ? 0 : (projectedAttended / projectedTotal) * 100;
+        for (let i = 0; i <= 10; i++) {
+            const projTotal = total + i;
+            const projAttended = attended + i; // Assume perfect attendance next
+            const pct = projTotal === 0 ? 0 : (projAttended / projTotal) * 100;
             
-            const isTargetMet = pct >= target;
-            const colorClass = isTargetMet ? 'bg-green-400' : 'bg-gray-300';
-            const height = Math.max(pct, 15); // Min height visually
+            const isMet = pct >= target;
+            const height = Math.max(pct, 15); // Min height for visibility
 
             const bar = document.createElement('div');
-            bar.className = `flex-1 rounded-t-sm mx-0.5 relative group ${colorClass} hover:bg-indigo-500 transition-colors`;
+            bar.className = `flex-1 rounded-t-sm mx-0.5 relative group ${isMet ? 'bg-green-400' : 'bg-gray-300'} hover:bg-indigo-500 transition-colors`;
             bar.style.height = `${height}%`;
             
             // Tooltip
             bar.innerHTML = `
                 <div class="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 bg-gray-800 text-white text-[10px] rounded py-1 px-2 whitespace-nowrap z-20 shadow-lg font-bold">
-                    +${i} classes: ${pct.toFixed(1)}%
+                    +${i}: ${pct.toFixed(1)}%
                 </div>
             `;
             container.appendChild(bar);
@@ -110,28 +171,26 @@ const calc = {
         const line = document.createElement('div');
         line.className = "absolute w-full border-t border-dashed border-gray-400 opacity-50 z-10 pointer-events-none";
         line.style.bottom = `${target}%`;
-        line.style.left = 0;
         container.appendChild(line);
     }
 };
 
+
 // ============================================
-// 2. GPA CALCULATOR LOGIC
+// 2. GPA CALCULATOR MODULE
 // ============================================
 const gpaApp = {
     courses: [],
 
     init() {
-        const saved = localStorage.getItem('gpa_v1');
-        if (saved) {
-            this.courses = JSON.parse(saved);
-        }
+        const saved = Utils.load(CONFIG.storageKeys.gpa);
+        if (saved) this.courses = saved;
         if (this.courses.length === 0) this.addRow();
         this.render();
     },
 
     save() {
-        localStorage.setItem('gpa_v1', JSON.stringify(this.courses));
+        Utils.save(CONFIG.storageKeys.gpa, this.courses);
     },
 
     addRow() {
@@ -143,15 +202,17 @@ const gpaApp = {
     removeRow(id) {
         this.courses = this.courses.filter(c => c.id !== id);
         this.save();
-        this.calculate();
+        this.calculate(); // Recalc immediately
         this.render();
     },
 
     updateRow(id, field, value) {
         const course = this.courses.find(c => c.id === id);
-        course[field] = parseFloat(value) || 0;
-        this.save();
-        this.calculate();
+        if (course) {
+            course[field] = parseFloat(value) || 0;
+            this.save();
+            this.calculate();
+        }
     },
 
     calculate() {
@@ -161,31 +222,25 @@ const gpaApp = {
         this.courses.forEach(c => {
             if (c.max === 0 || c.credits === 0) return;
 
-            // Normalize to Percentage
+            // 1. Normalize to Percentage
             const percent = (c.obtained / c.max) * 100;
 
-            // University Specific Ladder
-            let gradePoint = 0;
-            if (percent >= 90)      gradePoint = 10;
-            else if (percent >= 85) gradePoint = 9;
-            else if (percent >= 75) gradePoint = 8;
-            else if (percent >= 65) gradePoint = 7;
-            else if (percent >= 55) gradePoint = 6;
-            else if (percent >= 43) gradePoint = 5;
-            else if (percent >= 40) gradePoint = 4;
-            else                    gradePoint = 0;
+            // 2. Get Grade Point from Config Loop (Cleaner than if/else)
+            const grade = CONFIG.gradingScale.find(scale => percent >= scale.min);
+            const gradePoint = grade ? grade.points : 0;
 
+            // 3. Weighting
             totalWeightedPoints += (gradePoint * c.credits);
             totalCredits += c.credits;
         });
 
         const gpa = totalCredits === 0 ? 0 : (totalWeightedPoints / totalCredits);
-        document.getElementById('gpa-result').innerText = gpa.toFixed(2);
-        document.getElementById('gpa-credits').innerText = totalCredits;
+        Utils.id('gpa-result').innerText = gpa.toFixed(2);
+        Utils.id('gpa-credits').innerText = totalCredits;
     },
 
     reset() {
-        if(confirm("Clear all GPA data?")) {
+        if (confirm("Clear all GPA data?")) {
             this.courses = [];
             this.addRow();
             this.render();
@@ -193,7 +248,7 @@ const gpaApp = {
     },
 
     render() {
-        const list = document.getElementById('gpa-list');
+        const list = Utils.id('gpa-list');
         list.innerHTML = '';
 
         this.courses.forEach((c, index) => {
@@ -225,47 +280,95 @@ const gpaApp = {
             `;
             list.appendChild(row);
         });
+        
         this.calculate();
     }
 };
 
+
 // ============================================
-// 3. MAIN APP LOGIC (Schedule & Attendance)
+// 3. MAIN APPLICATION (Schedule & Attendance)
 // ============================================
 const app = {
     state: {
         schedule: {}, 
         stats: {},    
-        history: {},  
+        history: {}  
     },
 
     init() {
-        const saved = localStorage.getItem('att_smart_v2');
-        if (saved) this.state = JSON.parse(saved);
+        // Load State
+        const saved = Utils.load(CONFIG.storageKeys.attendance);
+        if (saved) this.state = saved;
 
-        // Date Display
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('current-date-display').innerText = new Date().toLocaleDateString('en-US', options);
+        // Set Date
+        Utils.id('current-date-display').innerText = Utils.formatDate();
 
-        // Init Sub-Apps
+        // Initialize Components
+        this.loadTheme();
         calc.update();
         gpaApp.init();
 
-        // Check if holiday toggle was left on (reset on reload for safety)
-        document.getElementById('holiday-toggle').checked = false;
+        // Reset Holiday Toggle on load for safety
+        const holidayToggle = Utils.id('holiday-toggle');
+        if(holidayToggle) holidayToggle.checked = false;
         
-        // Default View
+        // Start on Calculator View
         this.view('calc');
     },
 
     save() {
-        localStorage.setItem('att_smart_v2', JSON.stringify(this.state));
+        Utils.save(CONFIG.storageKeys.attendance, this.state);
     },
 
-    // --- Schedule ---
+    // --- VIEW MANAGEMENT ---
+    view(viewName) {
+        // Hide all views
+        document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+        // Show target
+        Utils.id(`view-${viewName}`).classList.remove('hidden');
+        
+        // Update Nav
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        Utils.id(`btn-${viewName}`).classList.add('active');
+        
+        // Handle specific view requirements
+        const holidayWrapper = Utils.id('holiday-wrapper');
+        if (viewName === 'today') {
+            holidayWrapper.classList.remove('hidden');
+            this.renderToday();
+        } else {
+            holidayWrapper.classList.add('hidden');
+        }
+
+        if (viewName === 'stats') this.renderStats();
+        if (viewName === 'schedule') this.renderScheduleList();
+    },
+
+    // --- THEME MANAGEMENT ---
+    toggleTheme() {
+        document.body.classList.toggle('dark');
+        const isDark = document.body.classList.contains('dark');
+        localStorage.setItem(CONFIG.storageKeys.theme, isDark ? 'dark' : 'light');
+        this.updateThemeIcons(isDark);
+    },
+
+    loadTheme() {
+        const theme = localStorage.getItem(CONFIG.storageKeys.theme);
+        const isDark = theme === 'dark';
+        if (isDark) document.body.classList.add('dark');
+        this.updateThemeIcons(isDark);
+    },
+
+    updateThemeIcons(isDark) {
+        Utils.id('icon-moon').classList.toggle('hidden', isDark);
+        Utils.id('icon-sun').classList.toggle('hidden', !isDark);
+    },
+
+    // --- SCHEDULE LOGIC ---
     addToSchedule() {
-        const day = document.getElementById('sched-day').value;
-        const subInput = document.getElementById('sched-subject');
+        const day = Utils.id('sched-day').value;
+        const subInput = Utils.id('sched-subject');
         const subject = subInput.value.trim();
 
         if (!subject) return;
@@ -282,19 +385,25 @@ const app = {
     },
 
     removeFromSchedule(day, index) {
-        if(confirm("Remove this class from schedule?")) {
+        if (confirm("Remove this class from schedule?")) {
             this.state.schedule[day].splice(index, 1);
             this.save();
             this.renderScheduleList();
         }
     },
 
-    // --- Attendance Action ---
+    // --- ATTENDANCE ACTIONS ---
     mark(subject, status) {
-        const todayKey = new Date().toISOString().split('T')[0];
+        const todayKey = Utils.getTodayKey();
         
+        // Ensure history object exists
         if (!this.state.history[todayKey]) this.state.history[todayKey] = {};
-        if (this.state.history[todayKey][subject]) return alert("Already marked for today!");
+        
+        // Prevent double marking
+        if (this.state.history[todayKey][subject]) {
+            alert("Already marked for today!");
+            return;
+        }
 
         // Update counts
         this.state.stats[subject].total++;
@@ -308,25 +417,24 @@ const app = {
     },
 
     toggleHoliday() {
-        const isHoliday = document.getElementById('holiday-toggle').checked;
-        const container = document.getElementById('today-container');
-        const banner = document.getElementById('holiday-banner');
+        const isHoliday = Utils.id('holiday-toggle').checked;
+        Utils.id('today-container').classList.toggle('hidden', isHoliday);
+        Utils.id('holiday-banner').classList.toggle('hidden', !isHoliday);
+    },
 
-        if(isHoliday) {
-            container.classList.add('hidden');
-            banner.classList.remove('hidden');
-        } else {
-            container.classList.remove('hidden');
-            banner.classList.add('hidden');
+    resetAll() {
+        if (confirm("Factory Reset: This will wipe your Schedule, Attendance, and GPA data. Continue?")) {
+            localStorage.clear();
+            location.reload();
         }
     },
 
-    // --- Renders ---
+    // --- RENDERING ---
     renderToday() {
-        const container = document.getElementById('today-container');
+        const container = Utils.id('today-container');
         const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
         const classes = this.state.schedule[dayName] || [];
-        const todayKey = new Date().toISOString().split('T')[0];
+        const todayKey = Utils.getTodayKey();
         const history = this.state.history[todayKey] || {};
 
         if (classes.length === 0) {
@@ -342,7 +450,7 @@ const app = {
 
         classes.forEach(sub => {
             const isDone = history[sub];
-            let actionButtons = '';
+            let actionButtons;
             
             if (isDone) {
                 const color = isDone === 'present' ? 'text-green-700 bg-green-50 border-green-200' : 'text-red-700 bg-red-50 border-red-200';
@@ -352,33 +460,31 @@ const app = {
                     <div class="flex gap-2 w-full">
                         <button onclick="app.mark('${sub}', 'present')" class="att-btn flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-sm shadow-indigo-200">Present</button>
                         <button onclick="app.mark('${sub}', 'absent')" class="att-btn flex-1 bg-white text-red-500 border border-red-100 py-3 rounded-xl font-bold hover:bg-red-50">Absent</button>
-                    </div>
-                `;
+                    </div>`;
             }
 
             html += `
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-gray-700 text-lg">${sub}</span>
-                        <span class="text-[10px] uppercase font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Pending</span>
+                        ${!isDone ? '<span class="text-[10px] uppercase font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Pending</span>' : ''}
                     </div>
                     ${actionButtons}
-                </div>
-            `;
+                </div>`;
         });
         
         container.innerHTML = html + `</div>`;
     },
 
     renderStats() {
-        const list = document.getElementById('stats-list');
+        const list = Utils.id('stats-list');
         list.innerHTML = '';
         
         let totalAtt = 0, totalClasses = 0, totalSafe = 0;
 
         Object.keys(this.state.stats).forEach(subName => {
             const s = this.state.stats[subName];
-            if (s.total === 0) return; // Skip empty subjects
+            if (s.total === 0) return;
 
             const percent = (s.attended / s.total) * 100;
             const safeSkips = Math.floor((s.attended / 0.75) - s.total);
@@ -389,41 +495,39 @@ const app = {
             totalClasses += s.total;
             if (safeSkips > 0) totalSafe += safeSkips;
 
-            const barColor = isSafe ? 'bg-green-500' : 'bg-red-500';
-            const textColor = isSafe ? 'text-green-600' : 'text-red-600';
-
             list.innerHTML += `
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                     <div class="flex justify-between mb-1 items-end">
                         <span class="font-bold text-gray-800">${subName}</span>
-                        <span class="${textColor} font-black text-xl">${percent.toFixed(0)}%</span>
+                        <span class="${isSafe ? 'text-green-600' : 'text-red-600'} font-black text-xl">${percent.toFixed(0)}%</span>
                     </div>
-                    
                     <div class="w-full bg-gray-100 rounded-full h-2 mb-2">
-                        <div class="${barColor} h-2 rounded-full" style="width: ${percent}%"></div>
+                        <div class="${isSafe ? 'bg-green-500' : 'bg-red-500'} h-2 rounded-full" style="width: ${percent}%"></div>
                     </div>
-
                     <div class="flex justify-between text-xs">
                         <span class="text-gray-400 font-medium">${s.attended}/${s.total} Classes</span>
-                        <span class="${textColor} font-bold">${isSafe ? `Safe to bunk: ${safeSkips}` : `Attend next: ${required}`}</span>
+                        <span class="${isSafe ? 'text-green-600' : 'text-red-600'} font-bold">
+                            ${isSafe ? `Safe to bunk: ${safeSkips}` : `Attend next: ${required}`}
+                        </span>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
 
         const global = totalClasses === 0 ? 100 : (totalAtt / totalClasses) * 100;
-        document.getElementById('stat-total-percent').innerText = global.toFixed(0) + '%';
-        document.getElementById('stat-safe-bunks').innerText = totalSafe;
+        Utils.id('stat-total-percent').innerText = global.toFixed(0) + '%';
+        Utils.id('stat-safe-bunks').innerText = totalSafe;
     },
 
     renderScheduleList() {
-        const list = document.getElementById('schedule-list');
+        const list = Utils.id('schedule-list');
         list.innerHTML = '';
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        let isEmpty = true;
 
         days.forEach(day => {
             const subs = this.state.schedule[day];
             if (subs && subs.length > 0) {
+                isEmpty = false;
                 let items = '';
                 subs.forEach((sub, idx) => {
                     items += `
@@ -437,44 +541,18 @@ const app = {
                     <div class="mb-4">
                         <h4 class="font-bold text-[10px] uppercase text-gray-400 mb-2 tracking-wider">${day}</h4>
                         <div class="flex flex-wrap gap-2">${items}</div>
-                    </div>
-                `;
+                    </div>`;
             }
         });
-        
-        if (list.innerHTML === '') {
+
+        if (isEmpty) {
             list.innerHTML = `<div class="text-center text-gray-400 text-sm py-4">Your schedule is empty. Add a class above!</div>`;
         }
-    },
-
-    resetAll() {
-        if(confirm("Factory Reset: This will wipe your Schedule, Attendance, and GPA data. Continue?")) {
-            localStorage.clear();
-            location.reload();
-        }
-    },
-
-    view(v) {
-        // 1. Hide all views
-        document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-        // 2. Show target view
-        document.getElementById(`view-${v}`).classList.remove('hidden');
-        
-        // 3. Update Nav Buttons
-        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(`btn-${v}`).classList.add('active');
-        
-        // 4. Toggle Holiday Visibility
-        const holidayWrapper = document.getElementById('holiday-wrapper');
-        if (v === 'today') holidayWrapper.classList.remove('hidden');
-        else holidayWrapper.classList.add('hidden');
-
-        // 5. Trigger Renders
-        if (v === 'today') this.renderToday();
-        if (v === 'stats') this.renderStats();
-        if (v === 'schedule') this.renderScheduleList();
     }
 };
 
-// Start App
-app.init();
+// --- INITIALIZATION ---
+// Ensure DOM is ready before running
+document.addEventListener('DOMContentLoaded', () => {
+    app.init();
+});
