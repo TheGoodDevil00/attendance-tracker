@@ -7,9 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4f46e5">
-<link rel="apple-touch-icon" href="icon-192.png">
     <style>
         /* Hide Number Spinners in Chrome/Safari/Edge */
         input[type=number]::-webkit-inner-spin-button, 
@@ -28,19 +25,26 @@
     <div class="max-w-4xl mx-auto p-4 md:p-6">
         
         <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <div class="text-center md:text-left">
-                <h1 class="text-2xl font-extrabold text-indigo-700">Attendance<span class="text-indigo-400">Tracker</span></h1>
-                <p class="text-xs text-gray-500" id="current-date-display">Loading Date...</p>
-            </div>
-            
-            <div id="holiday-wrapper" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-200">
-                <span class="text-xs font-bold text-gray-500 uppercase">Holiday Mode</span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="holiday-toggle" class="sr-only peer" onchange="app.toggleHoliday()">
-                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-yellow-400 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
-                </label>
-            </div>
-        </header>
+    <div class="text-center md:text-left">
+        <h1 class="text-2xl font-extrabold text-indigo-700">Attendance<span class="text-indigo-400">AI</span></h1>
+        <p class="text-xs text-gray-500" id="current-date-display">Loading Date...</p>
+    </div>
+    
+    <div class="flex items-center gap-3">
+        <button onclick="app.toggleTheme()" class="p-2 rounded-full bg-white border border-gray-200 shadow-sm text-gray-500 hover:bg-gray-50 transition">
+            <svg id="icon-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        </button>
+
+        <div id="holiday-wrapper" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-200">
+            <span class="text-xs font-bold text-gray-500 uppercase">Holiday</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="holiday-toggle" class="sr-only peer" onchange="app.toggleHoliday()">
+                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-yellow-400 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+            </label>
+        </div>
+    </div>
+</header>
 
         <div class="grid grid-cols-5 gap-2 mb-6 bg-white p-1.5 rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
             <button onclick="app.view('calc')" id="btn-calc" class="nav-btn active">Calc</button>
@@ -240,14 +244,5 @@
     </div>
 
     <script src="script.js"></script>
-    <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-            .then(() => console.log('App is ready for offline use!'))
-            .catch(err => console.error('SW Error:', err));
-    }
-</script>
 </body>
-
 </html>
-
