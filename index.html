@@ -3,53 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance & GPA Manager</title>
+    <title>Student Life OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css?v=9">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4f46e5">
-    <link rel="apple-touch-icon" href="icon-192.png">
-
-    <style>
-        /* Hide Number Spinners */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
-    </style>
+    <style>input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type=number]{-moz-appearance:textfield}</style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen font-inter">
 
-    <div class="max-w-4xl mx-auto p-4 md:p-6">
+    <div class="max-w-4xl mx-auto p-4 md:p-6 pb-24">
         
         <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div class="text-center md:text-left">
-                <h1 class="text-2xl font-extrabold text-indigo-700">Attendance<span class="text-indigo-400">AI</span></h1>
-                <p class="text-xs text-gray-500" id="current-date-display">Loading Date...</p>
+                <h1 class="text-2xl font-extrabold text-indigo-700">Student<span class="text-indigo-400">OS</span></h1>
+                <p class="text-xs text-gray-500" id="current-date-display">Loading...</p>
             </div>
-            
             <div class="flex items-center gap-3">
                 <button onclick="app.toggleTheme()" class="p-2 rounded-full bg-white border border-gray-200 shadow-sm text-gray-500 hover:bg-gray-50 transition">
                     <svg id="icon-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </button>
-
                 <div id="holiday-wrapper" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-200">
                     <span class="text-xs font-bold text-gray-500 uppercase">Holiday</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="holiday-toggle" class="sr-only peer" onchange="app.toggleHoliday()">
-                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-yellow-400 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
-                    </label>
+                    <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="holiday-toggle" class="sr-only peer" onchange="app.toggleHoliday()"><div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-yellow-400 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all"></div></label>
                 </div>
             </div>
         </header>
 
-        <div class="grid grid-cols-5 gap-2 mb-6 bg-white p-1.5 rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+        <div class="grid grid-cols-7 gap-1 mb-6 bg-white p-1.5 rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
             <button onclick="app.view('calc')" id="btn-calc" class="nav-btn active">Calc</button>
             <button onclick="app.view('today')" id="btn-today" class="nav-btn">Today</button>
             <button onclick="app.view('stats')" id="btn-stats" class="nav-btn">Stats</button>
             <button onclick="app.view('schedule')" id="btn-schedule" class="nav-btn">Sched</button>
+            <button onclick="app.view('tasks')" id="btn-tasks" class="nav-btn text-orange-600">Tasks</button>
+            <button onclick="app.view('wallet')" id="btn-wallet" class="nav-btn text-emerald-600">Wallet</button>
             <button onclick="app.view('gpa')" id="btn-gpa" class="nav-btn text-indigo-600">GPA</button>
         </div>
 
@@ -57,105 +45,31 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="md:col-span-1 space-y-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-gray-800 uppercase text-xs tracking-wider">Input Data</h3>
-                            <button onclick="calc.reset()" class="text-xs text-indigo-500 font-bold hover:underline">RESET</button>
-                        </div>
-                        
-                        <div class="mb-5">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Total Classes</label>
-                            <div class="flex items-center gap-2 h-8">
-                                <button onclick="calc.adjust('total', -1)" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 font-bold flex items-center justify-center transition shadow-sm">-</button>
-                                <input type="number" id="calc-total" value="40" class="flex-1 h-8 text-center bg-white border border-gray-200 rounded-lg font-bold text-sm text-gray-800 outline-none focus:ring-2 focus:ring-indigo-100 shadow-sm" oninput="calc.update()">
-                                <button onclick="calc.adjust('total', 1)" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 font-bold flex items-center justify-center transition shadow-sm">+</button>
-                            </div>
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Attended</label>
-                            <div class="flex items-center gap-2 h-8">
-                                <button onclick="calc.adjust('attended', -1)" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 font-bold flex items-center justify-center transition shadow-sm">-</button>
-                                <input type="number" id="calc-attended" value="32" class="flex-1 h-8 text-center bg-white border border-gray-200 rounded-lg font-bold text-sm text-gray-800 outline-none focus:ring-2 focus:ring-indigo-100 shadow-sm" oninput="calc.update()">
-                                <button onclick="calc.adjust('attended', 1)" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 font-bold flex items-center justify-center transition shadow-sm">+</button>
-                            </div>
-                        </div>
-
-                        <button onclick="calc.attendToday()" class="w-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold py-3 rounded-xl hover:bg-indigo-600 hover:text-white transition shadow-sm flex items-center justify-center gap-2 text-sm">
-                            <span>✨ I Attended Class Today</span>
-                        </button>
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-gray-800 uppercase text-xs tracking-wider">Input Data</h3><button onclick="calc.reset()" class="text-xs text-indigo-500 font-bold hover:underline">RESET</button></div>
+                        <div class="mb-5"><label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Total</label><div class="flex items-center gap-2 h-8"><button onclick="calc.adjust('total', -1)" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 font-bold flex items-center justify-center">-</button><input type="number" id="calc-total" value="40" class="flex-1 h-8 text-center bg-white border border-gray-200 rounded-lg font-bold text-sm outline-none" oninput="calc.update()"><button onclick="calc.adjust('total', 1)" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 font-bold flex items-center justify-center">+</button></div></div>
+                        <div class="mb-6"><label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Attended</label><div class="flex items-center gap-2 h-8"><button onclick="calc.adjust('attended', -1)" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 font-bold flex items-center justify-center">-</button><input type="number" id="calc-attended" value="32" class="flex-1 h-8 text-center bg-white border border-gray-200 rounded-lg font-bold text-sm outline-none" oninput="calc.update()"><button onclick="calc.adjust('attended', 1)" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 font-bold flex items-center justify-center">+</button></div></div>
+                        <button onclick="calc.attendToday()" class="w-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold py-3 rounded-xl hover:bg-indigo-600 hover:text-white transition shadow-sm text-sm">✨ I Attended Class Today</button>
                     </div>
-
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <div class="flex justify-between mb-2">
-                            <h3 class="font-bold text-gray-700 text-sm">Target %</h3>
-                            <span id="target-display" class="font-bold text-indigo-600 text-lg">75%</span>
-                        </div>
-                        <input type="range" id="calc-target" min="1" max="100" value="75" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="calc.update()">
-                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between mb-2"><h3 class="font-bold text-gray-700 text-sm">Target %</h3><span id="target-display" class="font-bold text-indigo-600 text-lg">75%</span></div><input type="range" id="calc-target" min="1" max="100" value="75" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="calc.update()"></div>
                 </div>
-
                 <div class="md:col-span-2 space-y-6">
                     <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-200 relative overflow-hidden">
-                        <div class="flex justify-between items-center relative z-10">
-                            <div>
-                                <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Status</p>
-                                <h2 id="calc-status-title" class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-2">Safe!</h2>
-                                <p id="calc-status-desc" class="text-gray-500 text-sm">Buffer available.</p>
-                            </div>
-                            <div class="relative w-28 h-28 md:w-32 md:h-32 flex items-center justify-center">
-                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                    <circle cx="50" cy="50" r="40" stroke="#f3f4f6" stroke-width="8" fill="transparent" />
-                                    <circle id="circle-progress" cx="50" cy="50" r="40" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="0" stroke-linecap="round" class="text-green-500 transition-all duration-1000 ease-out" />
-                                </svg>
-                                <span id="calc-percent" class="absolute text-2xl md:text-3xl font-black text-gray-800">80%</span>
-                            </div>
-                        </div>
+                        <div class="flex justify-between items-center relative z-10"><div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Status</p><h2 id="calc-status-title" class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-2">Safe!</h2><p id="calc-status-desc" class="text-gray-500 text-sm">Buffer available.</p></div><div class="relative w-28 h-28 md:w-32 md:h-32 flex items-center justify-center"><svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" stroke="#f3f4f6" stroke-width="8" fill="transparent" /><circle id="circle-progress" cx="50" cy="50" r="40" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="0" stroke-linecap="round" class="text-green-500 transition-all duration-1000 ease-out" /></svg><span id="calc-percent" class="absolute text-2xl md:text-3xl font-black text-gray-800">80%</span></div></div>
                     </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-green-50 p-5 rounded-2xl border border-green-100">
-                            <p class="text-[10px] font-bold text-green-600 uppercase mb-1">Bunks Left</p>
-                            <h3 id="calc-bunks" class="text-4xl font-extrabold text-green-700">2</h3>
-                        </div>
-                        <div class="bg-orange-50 p-5 rounded-2xl border border-orange-100">
-                            <p class="text-[10px] font-bold text-orange-600 uppercase mb-1">Recover</p>
-                            <h3 id="calc-recover" class="text-4xl font-extrabold text-orange-700">0</h3>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <h3 class="font-bold text-gray-700 mb-4 text-sm">Forecast</h3>
-                        <div class="h-32 flex items-end justify-between gap-1 md:gap-2 relative" id="forecast-container"></div>
-                        <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-bold uppercase">
-                            <span>Now</span>
-                            <span>+10 Classes</span>
-                        </div>
-                    </div>
+                    <div class="grid grid-cols-2 gap-4"><div class="bg-green-50 p-5 rounded-2xl border border-green-100"><p class="text-[10px] font-bold text-green-600 uppercase mb-1">Bunks Left</p><h3 id="calc-bunks" class="text-4xl font-extrabold text-green-700">2</h3></div><div class="bg-orange-50 p-5 rounded-2xl border border-orange-100"><p class="text-[10px] font-bold text-orange-600 uppercase mb-1">Recover</p><h3 id="calc-recover" class="text-4xl font-extrabold text-orange-700">0</h3></div></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h3 class="font-bold text-gray-700 mb-4 text-sm">Forecast</h3><div class="h-32 flex items-end justify-between gap-1 md:gap-2 relative" id="forecast-container"></div></div>
                 </div>
             </div>
         </div>
 
         <div id="view-today" class="view-section hidden">
             <div id="today-container"></div>
-            <div id="holiday-banner" class="hidden bg-yellow-50 border border-yellow-200 rounded-xl p-8 text-center mt-4">
-                <div class="text-4xl mb-4">🎉</div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Holiday Mode</h2>
-                <p class="text-yellow-800">No attendance calculated today.</p>
-                <button onclick="document.getElementById('holiday-toggle').click()" class="mt-4 text-sm font-bold text-yellow-700 underline">Undo</button>
-            </div>
+            <div id="holiday-banner" class="hidden bg-yellow-50 border border-yellow-200 rounded-xl p-8 text-center mt-4"><h2 class="text-2xl font-bold text-gray-800 mb-2">Holiday Mode</h2><p class="text-yellow-800">No attendance calculated today.</p><button onclick="document.getElementById('holiday-toggle').click()" class="mt-4 text-sm font-bold text-yellow-700 underline">Undo</button></div>
         </div>
 
         <div id="view-stats" class="view-section hidden">
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-indigo-500 mb-6 flex justify-between items-center">
-                <div>
-                    <h2 class="text-3xl font-extrabold text-gray-800" id="stat-total-percent">0%</h2>
-                    <p class="text-xs text-gray-500 uppercase font-bold">Aggregate</p>
-                </div>
-                <div class="text-right">
-                    <h2 class="text-3xl font-extrabold text-green-600" id="stat-safe-bunks">0</h2>
-                    <p class="text-xs text-gray-500 uppercase font-bold">Total Safe Bunks</p>
-                </div>
-            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6"><h3 class="text-xs font-bold text-gray-500 uppercase mb-3">30-Day Activity</h3><div class="flex justify-between items-end gap-1 overflow-x-auto pb-2 min-h-[40px]" id="bunk-matrix"></div></div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-indigo-500 mb-6 flex justify-between items-center"><div><h2 class="text-3xl font-extrabold text-gray-800" id="stat-total-percent">0%</h2><p class="text-xs text-gray-500 uppercase font-bold">Aggregate</p></div><div class="text-right"><h2 class="text-3xl font-extrabold text-green-600" id="stat-safe-bunks">0</h2><p class="text-xs text-gray-500 uppercase font-bold">Total Safe Bunks</p></div></div>
             <div id="stats-list" class="space-y-3"></div>
         </div>
 
@@ -163,82 +77,68 @@
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6">
                 <h3 class="font-bold mb-4 text-gray-800">Add Class</h3>
                 <div class="flex flex-col md:flex-row gap-3">
-                    <select id="sched-day" class="p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-indigo-100 font-medium text-sm">
-                        <option value="Monday">Monday</option>
-                        <option value="Tuesday">Tuesday</option>
-                        <option value="Wednesday">Wednesday</option>
-                        <option value="Thursday">Thursday</option>
-                        <option value="Friday">Friday</option>
-                        <option value="Saturday">Saturday</option>
-                        <option value="Sunday">Sunday</option>
-                    </select>
-                    <input type="text" id="sched-subject" placeholder="Subject Name" class="flex-1 p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-indigo-100 font-medium text-sm">
-                    <button onclick="app.addToSchedule()" class="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 shadow-sm transition">Add</button>
+                    <select id="sched-day" class="p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none font-medium text-sm"><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Sunday">Sunday</option></select>
+                    <input type="text" id="sched-subject" placeholder="Subject Name" class="flex-1 p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none font-medium text-sm">
+                    <button onclick="app.addToSchedule()" class="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 shadow-sm">Add</button>
                 </div>
             </div>
             <div id="schedule-list" class="space-y-4"></div>
-            <button onclick="app.resetAll()" class="mt-12 w-full text-red-400 text-xs font-bold py-3 border border-red-100 rounded hover:bg-red-50 transition">⚠ Factory Reset</button>
+            <div class="text-right mb-4"><button onclick="app.openBulkModal()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline flex items-center justify-end gap-1 ml-auto">Paste Schedule Text</button></div>
+            <div class="mt-8 border-t border-gray-100 pt-6">
+                <h3 class="text-xs font-bold text-gray-400 uppercase mb-3">Data Management</h3>
+                <div class="grid grid-cols-2 gap-3 mb-3"><button onclick="app.exportData()" class="bg-white border border-gray-200 text-indigo-600 font-bold py-3 rounded-xl hover:bg-indigo-50 text-xs shadow-sm">⬇️ Backup</button><label class="bg-white border border-gray-200 text-indigo-600 font-bold py-3 rounded-xl hover:bg-indigo-50 text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"><span>⬆️ Restore</span><input type="file" id="import-file" class="hidden" onchange="app.importData(this)"></label></div>
+                <button onclick="app.resetAll()" class="w-full text-red-400 text-xs font-bold py-3 border border-red-100 rounded-xl hover:bg-red-50">⚠ Factory Reset</button>
+            </div>
+        </div>
+
+        <div id="view-tasks" class="view-section hidden">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6">
+                <h3 class="font-bold text-gray-800 mb-3">Add Deadline</h3>
+                <div class="flex flex-col gap-3">
+                    <div class="flex gap-2"><select id="task-subject" class="p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm font-bold flex-1 outline-none text-gray-700"></select><input type="date" id="task-date" class="p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm font-bold w-1/3 outline-none text-gray-700"></div>
+                    <div class="flex gap-2"><input type="text" id="task-desc" placeholder="Assignment Name" class="flex-1 p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm outline-none"><button onclick="taskApp.add()" class="bg-indigo-600 text-white px-6 rounded-lg font-bold shadow-sm hover:bg-indigo-700 text-xl leading-none pt-1">+</button></div>
+                </div>
+            </div>
+            <div id="task-list" class="space-y-3"></div>
+        </div>
+
+        <div id="view-wallet" class="view-section hidden">
+            <div class="bg-emerald-900 text-white p-6 rounded-2xl shadow-lg mb-6 relative overflow-hidden">
+                <div class="relative z-10 flex justify-between items-end mb-2"><div><p class="text-emerald-200 text-[10px] font-bold uppercase tracking-wider mb-1">Monthly Spent</p><h2 class="text-4xl font-extrabold flex items-baseline"><span class="text-lg opacity-50 mr-1">₹</span><span id="wallet-total">0</span></h2></div><div class="text-right"><button onclick="walletApp.setBudget()" class="text-[10px] bg-emerald-800 hover:bg-emerald-700 px-2 py-1 rounded border border-emerald-700 transition">Set Budget</button><p class="text-sm font-bold mt-1 opacity-80">Limit: ₹<span id="wallet-limit">0</span></p></div></div>
+                <div class="relative z-10 w-full bg-emerald-800 rounded-full h-2"><div id="wallet-progress" class="bg-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div></div><div class="absolute -right-4 -top-8 w-32 h-32 bg-emerald-600 rounded-full opacity-20 blur-2xl"></div>
+            </div>
+            <div class="mb-6"><h3 class="text-xs font-bold text-gray-400 uppercase mb-2">Quick Add</h3><div class="flex gap-2 overflow-x-auto pb-2"><button onclick="walletApp.quickAdd('Canteen')" class="whitespace-nowrap bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-gray-600 shadow-sm hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition">🍔 Canteen</button><button onclick="walletApp.quickAdd('Travel')" class="whitespace-nowrap bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-gray-600 shadow-sm hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition">🚌 Travel</button><button onclick="walletApp.quickAdd('Printout')" class="whitespace-nowrap bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-gray-600 shadow-sm hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-200 transition">🖨️ Print</button><button onclick="walletApp.quickAdd('Stationery')" class="whitespace-nowrap bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-gray-600 shadow-sm hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200 transition">✏️ Stationery</button></div></div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6"><h3 class="text-xs font-bold text-gray-400 uppercase mb-4">Breakdown</h3><div class="h-48 relative"><canvas id="expense-chart"></canvas></div></div>
+            <div class="grid grid-cols-2 gap-3 mb-6"><button onclick="walletApp.openModal('expense')" class="bg-white border border-red-100 p-4 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2 group"><div class="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center font-bold text-xl group-hover:bg-red-500 group-hover:text-white transition">💸</div><span class="text-xs font-bold text-gray-600">Custom</span></button><button onclick="walletApp.openModal('debt')" class="bg-white border border-orange-100 p-4 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2 group"><div class="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center font-bold text-xl group-hover:bg-orange-500 group-hover:text-white transition">🤝</div><span class="text-xs font-bold text-gray-600">Lent/Borrowed</span></button></div>
+            <div class="flex gap-2 mb-4 overflow-x-auto pb-1"><button onclick="walletApp.filter('all')" id="w-filter-all" class="px-4 py-1.5 rounded-full text-[10px] font-bold bg-gray-800 text-white shadow-sm">All</button><button onclick="walletApp.filter('month')" id="w-filter-month" class="px-4 py-1.5 rounded-full text-[10px] font-bold bg-white border border-gray-200 text-gray-500 hover:bg-gray-50">This Month</button><button onclick="walletApp.filter('debt')" id="w-filter-debt" class="px-4 py-1.5 rounded-full text-[10px] font-bold bg-white border border-gray-200 text-gray-500 hover:bg-gray-50">Debts</button></div>
+            <div id="wallet-list" class="space-y-3 pb-10"></div>
         </div>
 
         <div id="view-gpa" class="view-section hidden">
             <div class="bg-indigo-900 text-white p-6 rounded-2xl shadow-lg mb-6 flex justify-between items-center relative overflow-hidden">
-                <div class="relative z-10">
-                    <p class="text-indigo-200 text-[10px] font-bold uppercase tracking-wider mb-1">Semester GPA</p>
-                    <h2 class="text-5xl font-extrabold" id="gpa-result">0.00</h2>
-                </div>
-                <div class="text-right relative z-10">
-                    <p class="text-[10px] text-indigo-200 font-bold uppercase tracking-wider">Credits</p>
-                    <p class="text-2xl font-bold" id="gpa-credits">0</p>
-                </div>
+                <div class="relative z-10"><p class="text-indigo-200 text-[10px] font-bold uppercase tracking-wider mb-1">Semester GPA</p><h2 class="text-5xl font-extrabold" id="gpa-result">0.00</h2></div>
+                <div class="text-right relative z-10"><p class="text-[10px] text-indigo-200 font-bold uppercase tracking-wider">Credits</p><p class="text-2xl font-bold" id="gpa-credits">0</p></div>
                 <div class="absolute -right-6 -bottom-10 w-32 h-32 bg-indigo-700 rounded-full opacity-50 blur-2xl"></div>
             </div>
-            
             <div id="gpa-list" class="space-y-3 mb-6"></div>
-            
-            <div class="flex gap-3 mb-6">
-                <button onclick="gpaApp.addRow()" class="flex-1 bg-white border border-gray-200 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 shadow-sm transition text-sm">+ Add Subject</button>
-                <button onclick="gpaApp.reset()" class="px-6 text-red-400 font-bold text-xs hover:text-red-600 bg-white border border-transparent hover:border-red-100 rounded-xl transition">Reset</button>
-            </div>
-
-            <div class="bg-gray-50 p-4 rounded-xl text-center border border-gray-100">
-                <div class="flex justify-between items-center mb-2">
-                    <p class="text-xs text-gray-500 font-bold uppercase">Grading Logic</p>
-                    <button onclick="gpaApp.openSettings()" class="text-[10px] bg-white border border-gray-300 px-3 py-1 rounded-lg font-bold text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition">⚙️ Edit Scale</button>
-                </div>
-                <div id="grading-scale-display" class="flex flex-wrap justify-center gap-2"></div>
-            </div>
+            <div class="flex gap-3 mb-6"><button onclick="gpaApp.addRow()" class="flex-1 bg-white border border-gray-200 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 shadow-sm text-sm">+ Add Subject</button><button onclick="gpaApp.reset()" class="px-6 text-red-400 font-bold text-xs hover:text-red-600 bg-white border border-transparent hover:border-red-100 rounded-xl">Reset</button></div>
+            <div class="bg-gray-50 p-4 rounded-xl text-center border border-gray-100"><div class="flex justify-between items-center mb-2"><p class="text-xs text-gray-500 font-bold uppercase">Grading Logic</p><button onclick="gpaApp.openSettings()" class="text-[10px] bg-white border border-gray-300 px-3 py-1 rounded-lg font-bold text-gray-600 hover:bg-indigo-50">⚙️ Edit Scale</button></div><div id="grading-scale-display" class="flex flex-wrap justify-center gap-2"></div></div>
         </div>
 
     </div>
 
-    <div id="gpa-settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up">
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-800">Customize Grading Scale</h3>
-                <button onclick="gpaApp.closeSettings()" class="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button>
-            </div>
-            <div class="p-5 max-h-[60vh] overflow-y-auto">
-                <p class="text-xs text-gray-500 mb-4">Define minimum % for each Grade Point. Auto-sorted.</p>
-                <div class="grid grid-cols-3 gap-2 mb-2 text-[10px] font-bold text-gray-400 uppercase">
-                    <div class="col-span-1">Min %</div>
-                    <div class="col-span-1">Points</div>
-                    <div class="col-span-1">Action</div>
-                </div>
-                <div id="settings-scale-list" class="space-y-2"></div>
-                <button onclick="gpaApp.addScaleRow()" class="mt-4 w-full py-2 border border-dashed border-gray-300 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50 transition">+ Add Range</button>
-            </div>
-            <div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-between gap-3">
-                <button onclick="gpaApp.restoreDefaults()" class="text-xs text-red-500 font-bold hover:underline">Restore Defaults</button>
-                <button onclick="gpaApp.saveSettings()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700">Save</button>
-            </div>
-        </div>
-    </div>
+    <div id="gpa-settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up"><div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 class="font-bold text-gray-800">Customize Grading Scale</h3><button onclick="gpaApp.closeSettings()" class="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button></div><div class="p-5 max-h-[60vh] overflow-y-auto"><div id="settings-scale-list" class="space-y-2"></div><button onclick="gpaApp.addScaleRow()" class="mt-4 w-full py-2 border border-dashed border-gray-300 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50">+ Add Range</button></div><div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-between gap-3"><button onclick="gpaApp.restoreDefaults()" class="text-xs text-red-500 font-bold hover:underline">Restore Defaults</button><button onclick="gpaApp.saveSettings()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700">Save</button></div></div></div>
+    <div id="bulk-import-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up"><div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 class="font-bold text-gray-800">Smart Text Import</h3><button onclick="app.closeBulkModal()" class="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button></div><div class="p-5"><p class="text-xs text-gray-500 mb-3">Paste schedule: <b>Day: Subject, Subject</b></p><textarea id="bulk-input" rows="8" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-100 outline-none resize-none"></textarea><button onclick="app.processBulkImport()" class="mt-4 w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 shadow-sm transition">⚡ Auto-Generate</button></div></div></div>
+    <div id="wallet-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up"><div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 class="font-bold text-gray-800" id="wallet-modal-title">Add Transaction</h3><button onclick="walletApp.closeModal()" class="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button></div><div class="p-5 space-y-4"><div><label class="text-[10px] font-bold text-gray-400 uppercase">Amount (₹)</label><input type="number" id="w-amount" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-2xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-indigo-100" placeholder="0"></div><div><label class="text-[10px] font-bold text-gray-400 uppercase">Description</label><input type="text" id="w-desc" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium outline-none" placeholder="e.g. Canteen"></div><div id="w-type-selector" class="hidden"><label class="text-[10px] font-bold text-gray-400 uppercase block mb-2">Type</label><div class="grid grid-cols-2 gap-3"><button onclick="walletApp.setType('lent')" id="btn-lent" class="py-2 rounded-lg border border-green-200 bg-green-50 text-green-700 font-bold text-xs">I Lent Money</button><button onclick="walletApp.setType('borrowed')" id="btn-borrowed" class="py-2 rounded-lg border border-gray-200 text-gray-500 font-bold text-xs">I Borrowed</button></div></div><button onclick="walletApp.saveTransaction()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 shadow-sm transition mt-2">Save</button></div></div></div>
 
-    <script src="script.js?v=4"></script>
+    <script src="script.js?v=9"></script>
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').catch(console.error);
-        }
+    // SELF-DESTRUCT for old Service Workers (To fix your PWA ghost)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) { registration.unregister(); } 
+        });
+    }
     </script>
 </body>
 </html>
