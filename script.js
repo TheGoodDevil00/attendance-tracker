@@ -1,7 +1,15 @@
-/** STUDENT LIFE OS (FINAL v9 - NO PWA) */
+/** BUNKRR / STUDENT OS (v10 - With Calc Persistence) */
 
 const CONFIG = {
-    storageKeys: { attendance: 'att_smart_v2', gpa: 'gpa_v1', theme: 'theme', gradingScale: 'gpa_scale_v1', tasks: 'tasks_v1', wallet: 'wallet_v1' },
+    storageKeys: { 
+        attendance: 'att_smart_v2', 
+        gpa: 'gpa_v1', 
+        theme: 'theme', 
+        gradingScale: 'gpa_scale_v1', 
+        tasks: 'tasks_v1', 
+        wallet: 'wallet_v1',
+        calc: 'calc_v1' // NEW: Storage key for Quick Calc
+    },
     defaultGradingScale: [{min:90,points:10},{min:85,points:9},{min:75,points:8},{min:65,points:7},{min:55,points:6},{min:43,points:5},{min:40,points:4},{min:0,points:0}],
     colors: { safe: 'text-green-500', danger: 'text-red-500' }
 };
@@ -15,18 +23,77 @@ const Utils = {
     parseInput: (id, fallback = 0) => { const el = Utils.id(id); const val = parseInt(el.value); return isNaN(val) ? fallback : val; }
 };
 
-// --- MODULES ---
+// ============================================
+// 1. CALCULATOR MODULE (Now with Memory!)
+// ============================================
 const calc = {
-    update() {
-        const total = Utils.parseInput('calc-total'); let attended = Utils.parseInput('calc-attended'); const target = Utils.parseInput('calc-target', 75);
-        if (attended > total) { attended = total; Utils.id('calc-attended').value = total; }
-        const percent = total === 0 ? 100 : ((attended / total) * 100);
-        Utils.id('calc-percent').innerText = percent.toFixed(0) + '%'; Utils.id('target-display').innerText = target + '%';
-        this.renderCircle(percent, target); this.renderStatus(attended, total, target, percent); this.renderForecast(attended, total, target);
+    init() {
+        // Load saved values if they exist
+        const saved = Utils.load(CONFIG.storageKeys.calc);
+        if (saved) {
+            Utils.id('calc-total').value = saved.total;
+            Utils.id('calc-attended').value = saved.attended;
+            Utils.id('calc-target').value = saved.target || 75;
+        }
+        this.update(); // Update UI with loaded values
     },
-    adjust(type, amount) { const input = Utils.id(`calc-${type}`); input.value = Math.max(0, (parseInt(input.value)||0) + amount); this.update(); },
-    attendToday() { const t = Utils.id('calc-total'); const a = Utils.id('calc-attended'); t.value = (parseInt(t.value)||0)+1; a.value = (parseInt(a.value)||0)+1; this.update(); },
-    reset() { Utils.id('calc-total').value = 40; Utils.id('calc-attended').value = 32; this.update(); },
+    
+    save() {
+        // Save current inputs to storage
+        const data = {
+            total: Utils.id('calc-total').value,
+            attended: Utils.id('calc-attended').value,
+            target: Utils.id('calc-target').value
+        };
+        Utils.save(CONFIG.storageKeys.calc, data);
+    },
+
+    update() {
+        const total = Utils.parseInput('calc-total'); 
+        let attended = Utils.parseInput('calc-attended'); 
+        const target = Utils.parseInput('calc-target', 75);
+
+        if (attended > total) { attended = total; Utils.id('calc-attended').value = total; }
+
+        const percent = total === 0 ? 100 : ((attended / total) * 100);
+        Utils.id('calc-percent').innerText = percent.toFixed(0) + '%'; 
+        Utils.id('target-display').innerText = target + '%';
+
+        this.renderCircle(percent, target); 
+        this.renderStatus(attended, total, target, percent); 
+        this.renderForecast(attended, total, target);
+        
+        this.save(); // Save on every update
+    },
+
+    adjust(type, amount) { 
+        const input = Utils.id(`calc-${type}`); 
+        input.value = Math.max(0, (parseInt(input.value)||0) + amount); 
+        this.update(); 
+    },
+
+    attendToday() { 
+        const t = Utils.id('calc-total'); 
+        const a = Utils.id('calc-attended'); 
+        t.value = (parseInt(t.value)||0)+1; 
+        a.value = (parseInt(a.value)||0)+1; 
+        this.update(); 
+        
+        // Button Feedback
+        const btn = document.activeElement;
+        if(btn && btn.tagName === 'BUTTON') {
+            const originalText = btn.innerText;
+            btn.innerText = "✅ Saved!";
+            setTimeout(() => btn.innerText = originalText, 1000);
+        }
+    },
+
+    reset() { 
+        Utils.id('calc-total').value = 40; 
+        Utils.id('calc-attended').value = 32; 
+        this.update(); 
+    },
+
     renderCircle(percent, target) {
         const c = Utils.id('circle-progress'); const off = 251.2 - (251.2 * percent) / 100; c.style.strokeDasharray = 251.2; c.style.strokeDashoffset = off;
         c.classList.remove(CONFIG.colors.safe, CONFIG.colors.danger); c.classList.add(percent >= target ? 'text-green-500' : 'text-red-500');
@@ -54,6 +121,9 @@ const calc = {
     }
 };
 
+// ============================================
+// 2. GPA MODULE
+// ============================================
 const gpaApp = {
     courses: [], currentScale: [], tempScaleSettings: [],
     init() { this.courses = Utils.load(CONFIG.storageKeys.gpa) || []; if(this.courses.length===0) this.addRow(); this.currentScale = Utils.load(CONFIG.storageKeys.gradingScale) || JSON.parse(JSON.stringify(CONFIG.defaultGradingScale)); this.render(); this.renderScaleBadges(); },
@@ -98,6 +168,9 @@ const gpaApp = {
     reset() { if(confirm("Clear GPA?")) { this.courses=[]; this.addRow(); this.render(); } }
 };
 
+// ============================================
+// 3. TASK MODULE
+// ============================================
 const taskApp = {
     tasks: [],
     init() { this.tasks = Utils.load(CONFIG.storageKeys.tasks) || []; this.render(); },
@@ -133,6 +206,9 @@ const taskApp = {
     }
 };
 
+// ============================================
+// 4. WALLET MODULE
+// ============================================
 const walletApp = {
     data: [], budget: 0, currentType: 'expense', currentFilter: 'all', chartInstance: null,
     init() { const d = Utils.load(CONFIG.storageKeys.wallet) || {data:[], budget: 5000}; this.data = d.data; this.budget = d.budget; this.render(); },
@@ -197,7 +273,7 @@ const walletApp = {
         const values = Object.values(agg);
 
         if(this.chartInstance) this.chartInstance.destroy();
-        if(values.length === 0) return; // Empty
+        if(values.length === 0) return; 
 
         this.chartInstance = new Chart(ctx, {
             type: 'doughnut',
@@ -237,12 +313,22 @@ const walletApp = {
     }
 };
 
+// ============================================
+// 5. MAIN APP (Init & Schedule)
+// ============================================
 const app = {
     state: { schedule: {}, stats: {}, history: {} },
     init() {
         this.state = Utils.load(CONFIG.storageKeys.attendance) || { schedule: {}, stats: {}, history: {} };
         Utils.id('current-date-display').innerText = Utils.formatDate();
-        this.loadTheme(); calc.update(); gpaApp.init(); taskApp.init(); walletApp.init();
+        this.loadTheme();
+        
+        // Init all sub-modules
+        calc.init();  // <--- NEW: Now has init()
+        gpaApp.init(); 
+        taskApp.init(); 
+        walletApp.init();
+        
         if(Utils.id('holiday-toggle')) Utils.id('holiday-toggle').checked = false;
         this.view('calc');
     },
@@ -278,11 +364,41 @@ const app = {
     toggleHoliday() { const h = Utils.id('holiday-toggle').checked; Utils.id('today-container').classList.toggle('hidden', h); Utils.id('holiday-banner').classList.toggle('hidden', !h); },
     resetAll() { if(confirm("Factory Reset?")) { localStorage.clear(); location.reload(); } },
     
-    exportData() { const d = { attendance: this.state, gpa: gpaApp.courses, scale: gpaApp.currentScale, tasks: taskApp.tasks, wallet: {data: walletApp.data, budget: walletApp.budget}, theme: localStorage.getItem(CONFIG.storageKeys.theme) }; const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(d)); a.download = `backup_${Utils.getTodayKey()}.json`; document.body.appendChild(a); a.click(); a.remove(); },
+    // Backup & Restore
+    exportData() { 
+        const d = { 
+            attendance: this.state, 
+            gpa: gpaApp.courses, 
+            scale: gpaApp.currentScale, 
+            tasks: taskApp.tasks, 
+            wallet: {data: walletApp.data, budget: walletApp.budget},
+            calc: { // <--- NEW: Include Calc in backup
+                total: Utils.id('calc-total').value,
+                attended: Utils.id('calc-attended').value,
+                target: Utils.id('calc-target').value
+            },
+            theme: localStorage.getItem(CONFIG.storageKeys.theme) 
+        }; 
+        const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(d)); a.download = `backup_${Utils.getTodayKey()}.json`; document.body.appendChild(a); a.click(); a.remove(); 
+    },
     importData(input) {
         const f = input.files[0]; if(!f) return;
         const r = new FileReader();
-        r.onload = (e) => { try { const d = JSON.parse(e.target.result); if(confirm("Overwrite?")) { if(d.attendance) Utils.save(CONFIG.storageKeys.attendance, d.attendance); if(d.gpa) Utils.save(CONFIG.storageKeys.gpa, d.gpa); if(d.scale) Utils.save(CONFIG.storageKeys.gradingScale, d.scale); if(d.tasks) Utils.save(CONFIG.storageKeys.tasks, d.tasks); if(d.wallet) Utils.save(CONFIG.storageKeys.wallet, d.wallet); if(d.theme) localStorage.setItem(CONFIG.storageKeys.theme, d.theme); location.reload(); } } catch(err) { alert("Invalid file."); } }; r.readAsText(f);
+        r.onload = (e) => { 
+            try { 
+                const d = JSON.parse(e.target.result); 
+                if(confirm("Overwrite?")) { 
+                    if(d.attendance) Utils.save(CONFIG.storageKeys.attendance, d.attendance); 
+                    if(d.gpa) Utils.save(CONFIG.storageKeys.gpa, d.gpa); 
+                    if(d.scale) Utils.save(CONFIG.storageKeys.gradingScale, d.scale); 
+                    if(d.tasks) Utils.save(CONFIG.storageKeys.tasks, d.tasks); 
+                    if(d.wallet) Utils.save(CONFIG.storageKeys.wallet, d.wallet);
+                    if(d.calc) Utils.save(CONFIG.storageKeys.calc, d.calc); // <--- NEW: Import Calc
+                    if(d.theme) localStorage.setItem(CONFIG.storageKeys.theme, d.theme); 
+                    location.reload(); 
+                } 
+            } catch(err) { alert("Invalid file."); } 
+        }; r.readAsText(f);
     },
     openBulkModal() { Utils.id('bulk-import-modal').classList.remove('hidden'); Utils.id('bulk-input').focus(); },
     closeBulkModal() { Utils.id('bulk-import-modal').classList.add('hidden'); Utils.id('bulk-input').value = ''; },
