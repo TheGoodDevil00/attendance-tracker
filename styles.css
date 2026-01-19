@@ -1,15 +1,7 @@
 body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
 
 /* Components */
-.nav-btn {
-    padding: 0.5rem 0.25rem;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    transition: all 0.2s ease;
-    color: #6b7280;
-    white-space: nowrap;
-}
+.nav-btn { padding: 0.5rem 0.25rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 700; transition: all 0.2s ease; color: #6b7280; white-space: nowrap; }
 .nav-btn:hover { background-color: #f3f4f6; color: #374151; }
 .nav-btn.active { background-color: #4f46e5; color: white; box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3); }
 
@@ -24,17 +16,14 @@ circle { transition: stroke-dashoffset 0.8s ease-out, stroke 0.3s ease; }
 .att-btn:active { transform: scale(0.97); }
 
 /* Range Slider */
-input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
-    background: #4f46e5; cursor: pointer; border: 3px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-top: -6px; 
-}
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #4f46e5; cursor: pointer; border: 3px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-top: -6px; }
 input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #e5e7eb; border-radius: 3px; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
 
-/* --- DARK MODE --- */
+/* DARK MODE */
 body.dark { background-color: #0f172a; color: #e2e8f0; }
 .dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; color: #e2e8f0; }
 .dark .bg-gray-50, .dark .bg-gray-100 { background-color: #0f172a !important; border-color: #334155 !important; color: #cbd5e1; }
@@ -49,3 +38,4 @@ body.dark { background-color: #0f172a; color: #e2e8f0; }
 .dark .nav-btn:hover { background-color: #334155; color: white; }
 .dark .bg-yellow-50 { background-color: #422006 !important; border-color: #713f12 !important; }
 .dark .text-yellow-800, .dark .text-yellow-700 { color: #fde047 !important; }
+<link rel="stylesheet" href="styles.css?v=8">
