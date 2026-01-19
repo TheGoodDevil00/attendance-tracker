@@ -1,4 +1,8 @@
+// OLD
 const CACHE_NAME = 'attendance-app-v1';
+
+// NEW: Just change the number (e.g., v8 to match your script)
+const CACHE_NAME = 'student-os-v8';
 const ASSETS = [
   './',
   './index.html',
