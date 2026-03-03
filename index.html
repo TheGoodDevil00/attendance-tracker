@@ -11,6 +11,11 @@
     <style>input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type=number]{-moz-appearance:textfield}</style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen font-inter">
+    <div id="splash-screen" class="fixed inset-0 z-[100] bg-gray-100 dark:bg-slate-900 flex items-center justify-center transition-opacity duration-500">
+        <video id="splash-video" autoplay muted playsinline class="w-48 md:w-64 rounded-2xl shadow-xl">
+            <source src="logo.mp4" type="video/mp4">
+        </video>
+    </div>
 
     <div class="max-w-4xl mx-auto p-4 md:p-6 pb-24">
         
